@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Trip Budget Tracker</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020617">
+
+<style>
+:root{
+    --bg:#020617; --card:#111827; --muted:#9ca3af;
+    --white:#fff; --blue:#3b82f6;
+    --green:#22c55e; --red:#ef4444;
+}
+*{box-sizing:border-box;font-family:system-ui,sans-serif;}
+
+body{
+    background:linear-gradient(145deg,#020617,#0f172a);
+    margin:0;padding:24px;min-height:100vh;
+    color:white;display:flex;justify-content:center;
+}
+
+.app{width:100%;max-width:430px;}
+h1{text-align:center}
+
+.card{
+    background:var(--card);
+    border-radius:16px;
+    padding:16px;
+    margin:12px 0;
+    box-shadow:0 10px 20px rgba(0,0,0,.25);
+}
+
+input,select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    background:#020617;
+    border:1px solid #1f2933;
+    color:white;
+    font-size:15px;
+}
+input:disabled{color:#aaa;}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border:none;border-radius:12px;
+    background:var(--blue);
+    color:white;font-weight:600;
+    cursor:pointer;
+}
+button:active{transform:scale(.97);}
+.secondary{background:#1f2933;}
+.danger{background:#350c11;}
+.controls{display:flex;gap:10px;}
+
+.stats{display:flex;justify-content:space-between;font-weight:600;}
+#remaining.green{color:var(--green);}
+#remaining.red{color:var(--red);}
+
+.expense{
+    background:#020617;
+    padding:12px;border-radius:12px;
+    margin:10px 0;
+    display:flex;
+    justify-content:space-between;
+}
+
+.exp-cat{
+    font-size:11px;
+    margin-top:2px;
+    color:var(--muted);
+}
+
+.exp-amt{
+    color:var(--blue);
+    font-weight:700;
+}
+
+.empty{
+    text-align:center;
+    padding:16px 0;
+    color:var(--muted);
+}
+
+/* ---------- CLEAN FORM LAYOUT ---------- */
+
+.form-title{
+    font-size:14px;
+    margin-bottom:10px;
+    color:#e5e7eb;
+    letter-spacing:.5px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+/* ---- MODAL ---- */
+
+.modal-bg{
+    position:fixed;inset:0;
+    background:rgba(2,6,23,.75);
+    backdrop-filter:blur(6px);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal{
+    background:var(--card);
+    border-radius:16px;
+    padding:18px;
+    width:90%;max-width:320px;
+    text-align:center;
+}
+.modal p{
+    color:var(--muted);
+    font-size:13px
+}
+.modal-actions{
+    display:flex;
+    gap:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>✈️ Trip Budget Tracker</h1>
+
+<!-- BUDGET -->
+<div class="card">
+    <input type="number" id="budgetInput" placeholder="Set trip budget">
+
+    <button id="setBtn" onclick="setBudget()">Lock Budget</button>
+
+    <div class="controls">
+        <button class="secondary" onclick="openAdjust(true)">
+            ➕ Increase
+        </button>
+        <button class="secondary" onclick="openAdjust(false)">
+            ➖ Decrease
+        </button>
+    </div>
+
+    <button class="danger" onclick="openReset()">
+        🔁 Start New Trip
+    </button>
+</div>
+
+<!-- STATS -->
+<div class="card stats">
+    <span>Total: ₹<span id="totalSpent">0</span></span>
+    <span>
+        Remaining:
+        ₹<span id="remaining" class="green">0</span>
+    </span>
+</div>
+
+<!-- ADD EXPENSE (CLEANED) -->
+<div class="card">
+
+    <div class="form-title">Add New Expense</div>
+
+    <div class="form-group">
+        <input id="expenseName" placeholder="Expense name">
+
+        <input id="expenseAmount"
+               type="number"
+               placeholder="Amount">
+
+        <select id="expenseCategory">
+            <option>Food</option>
+            <option>Travel</option>
+            <option>Stay</option>
+            <option>Shopping</option>
+            <option>Activities</option>
+            <option>Other</option>
+        </select>
+    </div>
+
+    <button style="margin-top:16px"
+            onclick="addExpense()">
+        ➕ Add Expense
+    </button>
+
+</div>
+
+<!-- EXPENSE LIST -->
+<div class="card">
+    <h3>Expenses</h3>
+
+    <div id="expenseList"></div>
+    <div id="empty" class="empty">No expenses yet.</div>
+</div>
+
+</div>
+
+<!-- Adjust Modal -->
+<div class="modal-bg" id="adjustBG">
+<div class="modal">
+    <h3 id="adjustTitle"></h3>
+    <p id="adjustDesc"></p>
+
+    <input id="adjustInput"
+           type="number"
+           placeholder="Enter amount">
+
+    <div class="modal-actions">
+        <button class="secondary"
+                onclick="closeAdjust()">
+                Cancel
+        </button>
+
+        <button onclick="confirmAdjust()">
+                Confirm
+        </button>
+    </div>
+</div>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal-bg" id="resetBG">
+<div class="modal">
+    <h3>Start New Trip</h3>
+    <p>This will clear your budget & expenses. Continue?</p>
+
+    <div class="modal-actions">
+        <button class="secondary"
+                onclick="closeReset()">
+                Cancel
+        </button>
+
+        <button class="danger"
+                onclick="resetTrip()">
+                Reset
+        </button>
+    </div>
+</div>
+</div>
+
+<script>
+let inc=true;
+
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let budget   = JSON.parse(localStorage.getItem("budget")) || 0;
+
+const budgetInput=document.getElementById("budgetInput");
+const setBtn=document.getElementById("setBtn");
+const list=document.getElementById("expenseList");
+const empty=document.getElementById("empty");
+
+if(budget>0){
+    budgetInput.disabled=true;
+    budgetInput.value=budget;
+    setBtn.disabled=true;
+    setBtn.textContent="Budget Locked";
+}
+
+render(); update();
+
+function save(){
+ localStorage.setItem("expenses",JSON.stringify(expenses));
+ localStorage.setItem("budget",budget);
+}
+
+/* Budget */
+function setBudget(){
+ const v=Number(budgetInput.value);
+ if(v<=0) return alert("Enter valid budget");
+ budget=v;
+
+ budgetInput.disabled=true;
+ setBtn.textContent="Budget Locked";
+ setBtn.disabled=true;
+
+ save(); update();
+}
+
+/* Adjust */
+function openAdjust(isInc){
+ if(budget<=0) return alert("Set budget first!");
+
+ inc=isInc;
+ adjustTitle.textContent = inc?"Increase Budget":"Decrease Budget";
+ adjustDesc.textContent  = inc?
+   "Add extra funds to trip budget."
+   :"Reduce available budget carefully.";
+
+ adjustInput.value="";
+ adjustBG.style.display="flex";
+}
+function closeAdjust(){
+ adjustBG.style.display="none";
+}
+
+function confirmAdjust(){
+ const v=Number(adjustInput.value);
+ if(v<=0) return;
+ if(!inc && v>budget)
+   return alert("Not enough budget");
+
+ budget += inc?v:-v;
+ budgetInput.value=budget;
+
+ save(); update();
+ closeAdjust();
+}
+
+/* Reset */
+function openReset(){ resetBG.style.display="flex"; }
+function closeReset(){ resetBG.style.display="none"; }
+
+function resetTrip(){
+ expenses=[];
+ budget=0;
+ localStorage.clear();
+
+ budgetInput.value="";
+ budgetInput.disabled=false;
+ setBtn.textContent="Lock Budget";
+ setBtn.disabled=false;
+
+ render();
+ update();
+ closeReset();
+}
+
+/* Expense */
+function addExpense(){
+ const n=expenseName.value.trim();
+ const a=Number(expenseAmount.value);
+ const c=expenseCategory.value;
+
+ if(!n || a<=0)
+   return alert("Invalid input");
+
+ expenses.push({
+   name:n,
+   amount:a,
+   cat:c
+ });
+
+ expenseName.value="";
+ expenseAmount.value="";
+
+ save();
+ render();
+ update();
+}
+
+/* Render */
+function render(){
+ list.innerHTML="";
+ if(!expenses.length){
+   empty.style.display="block";
+   return;
+ }
+ empty.style.display="none";
+
+ expenses.forEach(e=>{
+   const d=document.createElement("div");
+   d.className="expense";
+   d.innerHTML=`
+     <div>
+       <b>${e.name}</b>
+       <div class="exp-cat">${e.cat}</div>
+     </div>
+     <div class="exp-amt">₹${e.amount}</div>
+   `;
+   list.appendChild(d);
+ })
+}
+
+/* Stats */
+function update(){
+ const total=
+   expenses.reduce((s,e)=>s+e.amount,0);
+
+ totalSpent.textContent=total;
+
+ const rem=budget-total;
+ remaining.textContent=rem;
+ remaining.className =
+    rem<0?"red":"green";
+}
+
+/* PWA */
+if("serviceWorker" in navigator){
+ navigator.serviceWorker
+   .register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
