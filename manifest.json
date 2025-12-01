@@ -1,4 +1,5 @@
 {
+  "id": "/trip-budget-tracker/",
   "name": "Trip Budget Tracker",
   "short_name": "TripTrack",
 
@@ -24,3 +25,4 @@
     }
   ]
 }
+
