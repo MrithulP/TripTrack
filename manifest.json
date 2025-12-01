@@ -1,13 +1,16 @@
 {
   "name": "Trip Budget Tracker",
-  "short_name": "TripBudget",
-  "start_url": "./",
-  "scope": "./",
+  "short_name": "TripTrack",
+
+  "start_url": "/TripTrack/",
+  "scope": "/TripTrack/",
+
   "display": "standalone",
   "theme_color": "#020617",
   "background_color": "#020617",
+
   "description": "Offline trip expense tracker PWA with persistent budget storage",
-  "orientation": "portrait",
+
   "icons": [
     {
       "src": "icon-192.png",
