@@ -6,9 +6,9 @@ A lightweight, offline-first Progressive Web App (PWA) for tracking expenses dur
 
 ## The Origin
 
-This started on a trek expedition. Somewhere between a mountain pass and a chai stop, I realized I had no idea how much I'd spent or how much I had left for the rest of the journey. Spreadsheets don't work offline, banking apps don't give you a trip-level view, and pen-and-paper gets lost.
+TripTrack started as a simple problem during a trek—I couldn’t easily keep track of my expenses or know how much I had left. Existing tools either required internet, felt too complex, or didn’t give a clear view of spending for a single trip.
 
-So I built TripTrack — something simple enough to use mid-trek on a phone, that works without internet, and actually tells you something useful about your spending.
+TripTrack is a lightweight, offline-friendly solution that helps track expenses quickly and gives a clear overview of spending throughout a trip.
 
 ---
 
